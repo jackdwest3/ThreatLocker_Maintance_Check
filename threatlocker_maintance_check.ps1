@@ -63,6 +63,58 @@ else {
             $ticketStatus = "Resolved"
             Create-Syncro-Ticket-Comment -TicketIdOrNumber $ticketResult.ticket.id -Subject "Completed" -Body "ThreatLocker installation completed and verified." -Hidden "true" -DoNotEmail "true"
 
+            # Check if registry entry exists then # Check if ThreatLocker service file exists
+            if (Test-Path -Path $servicePath -PathType Leaf) {
+            Write-Host "ThreatLocker service file found. Checking uninstall string."
+            
+            if (-not (Test-Path -Path $registryPath)) {
+                # Registry entry doesn't exist. Creating...
+                Create-Syncro-Ticket-Comment -TicketIdOrNumber $ticketResult.ticket.id -Subject "Update" -Body "ThreatLocker uninstall registry key missing. Adding key." -Hidden "true" -DoNotEmail "true"
+                
+                $propertyValues = @{
+                    "AuthorizedCDFPrefix" = ""
+                    "Comments" = ""
+                    "Contact" = ""
+                    "DisplayVersion" = "5.30.1.0"
+                    "HelpLink" = [byte[]]@(0x68,0x00,0x74,0x00,0x74,0x00,0x70,0x00,0x73,0x00,0x3a,0x00,0x2f,0x00,0x2f,0x00,0x77,0x00,0x77,0x00,0x77,0x00,0x2e,0x00,0x74,0x00,0x68,0x00,0x72,0x00,0x65,0x00,0x61,0x00,0x74,0x00,0x6c,0x00,0x6f,0x00,0x63,0x00,0x6b,0x00,0x65,0x00,0x72,0x00,0x2e,0x00,0x63,0x00,0x6f,0x00,0x6d,0x00,0x2f,0x00,0x73,0x00,0x75,0x00,0x70,0x00,0x70,0x00,0x6f,0x00,0x72,0x00,0x74,0x00,0x00,0x00)
+                    "HelpTelephone" = ""
+                    "InstallDate" = "20221122"
+                    "InstallLocation" = ""
+                    "InstallSource" = "C:\Users\JackWest\Downloads\"
+                    "NoModify" = 1
+                    "NoRemove" = 1
+                    "NoRepair" = 1
+                    "Publisher" = "ThreatLocker, Inc"
+                    "Readme" = ""
+                    "Size" = ""
+                    "EstimatedSize" = 2477
+                    "SystemComponent" = 1
+                    "URLInfoAbout" = "https://www.threatlocker.com"
+                    "URLUpdateInfo" = ""
+                    "VersionMajor" = 5
+                    "VersionMinor" = 30
+                    "WindowsInstaller" = 1
+                    "Version" = 33226753
+                    "Language" = 1033
+                    "DisplayName" = "ThreatLocker"
+                }
+                
+            New-Item -Path $registryPath -Force
+            $propertyValues.GetEnumerator() | ForEach-Object {
+                Set-ItemProperty -Path $registryPath -Name $_.Key -Value $_.Value
+            }
+            #Add comment to ticket and write status to console.
+            Create-Syncro-Ticket-Comment -TicketIdOrNumber $ticketResult.ticket.id -Subject "Completed" -Body "ThreatLocker uninstall registry key created." -Hidden "true" -DoNotEmail "true"
+            Write-Host "Registry entry created."
+            # Log activity on the asset
+            Log-Activity -Message "Checked, installed, and verified ThreatLocker installation [script]" -EventName "ThreatLocker Installation" -TicketIdOrNumber $ticketResult.ticket.id
+        }
+    else {
+        Write-Host "Registry entry already exists."
+        Create-Syncro-Ticket-Comment -TicketIdOrNumber $ticketResult.ticket.id -Subject "Completed" -Body "ThreatLocker installation complete and verified." -Hidden "true" -DoNotEmail "true"
+        # Log activity on the asset
+        Log-Activity -Message "Checked, installed, and verified ThreatLocker installation [script]" -EventName "ThreatLocker Installation" -TicketIdOrNumber $ticketResult.ticket.id
+    }
         }
         else {
             Write-Output "Installation Failed"
@@ -84,56 +136,3 @@ else {
     # Update ticket status
     Update-Syncro-Ticket -TicketIdOrNumber $ticketResult.ticket.id -Status $ticketStatus
 }
-
-# Check if registry entry exists then # Check if ThreatLocker service file exists
-if (Test-Path -Path $servicePath -PathType Leaf) {
-    Write-Host "ThreatLocker service file found. Checking uninstall string."
-
-    if (-not (Test-Path -Path $registryPath)) {
-        # Registry entry doesn't exist. Creating...
-        Create-Syncro-Ticket-Comment -TicketIdOrNumber $ticketResult.ticket.id -Subject "Update" -Body "ThreatLocker uninstall registry key missing. Adding key." -Hidden "true" -DoNotEmail "true"
-    
-        $propertyValues = @{
-            "AuthorizedCDFPrefix" = ""
-            "Comments" = ""
-            "Contact" = ""
-            "DisplayVersion" = "5.30.1.0"
-            "HelpLink" = [byte[]]@(0x68,0x00,0x74,0x00,0x74,0x00,0x70,0x00,0x73,0x00,0x3a,0x00,0x2f,0x00,0x2f,0x00,0x77,0x00,0x77,0x00,0x77,0x00,0x2e,0x00,0x74,0x00,0x68,0x00,0x72,0x00,0x65,0x00,0x61,0x00,0x74,0x00,0x6c,0x00,0x6f,0x00,0x63,0x00,0x6b,0x00,0x65,0x00,0x72,0x00,0x2e,0x00,0x63,0x00,0x6f,0x00,0x6d,0x00,0x2f,0x00,0x73,0x00,0x75,0x00,0x70,0x00,0x70,0x00,0x6f,0x00,0x72,0x00,0x74,0x00,0x00,0x00)
-            "HelpTelephone" = ""
-            "InstallDate" = "20221122"
-            "InstallLocation" = ""
-            "InstallSource" = "C:\Users\JackWest\Downloads\"
-            "NoModify" = 1
-            "NoRemove" = 1
-            "NoRepair" = 1
-            "Publisher" = "ThreatLocker, Inc"
-            "Readme" = ""
-            "Size" = ""
-            "EstimatedSize" = 2477
-            "SystemComponent" = 1
-            "URLInfoAbout" = "https://www.threatlocker.com"
-            "URLUpdateInfo" = ""
-            "VersionMajor" = 5
-            "VersionMinor" = 30
-            "WindowsInstaller" = 1
-            "Version" = 33226753
-            "Language" = 1033
-            "DisplayName" = "ThreatLocker"
-        }
-
-        New-Item -Path $registryPath -Force
-        $propertyValues.GetEnumerator() | ForEach-Object {
-            Set-ItemProperty -Path $registryPath -Name $_.Key -Value $_.Value
-        }
-        #Add comment to ticket and write status to console.
-        Create-Syncro-Ticket-Comment -TicketIdOrNumber $ticketResult.ticket.id -Subject "Completed" -Body "ThreatLocker uninstall registry key created." -Hidden "true" -DoNotEmail "true"
-        Write-Host "Registry entry created."
-        # Log activity on the asset
-        Log-Activity -Message "Checked, installed, and verified ThreatLocker installation [script]" -EventName "ThreatLocker Installation" -TicketIdOrNumber $ticketResult.ticket.id
-    }
-    else {
-        Write-Host "Registry entry already exists."
-        Create-Syncro-Ticket-Comment -TicketIdOrNumber $ticketResult.ticket.id -Subject "Completed" -Body "ThreatLocker installation complete and verified." -Hidden "true" -DoNotEmail "true"
-        # Log activity on the asset
-        Log-Activity -Message "Checked, installed, and verified ThreatLocker installation [script]" -EventName "ThreatLocker Installation" -TicketIdOrNumber $ticketResult.ticket.id
-    }
